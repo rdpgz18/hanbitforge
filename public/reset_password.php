@@ -157,17 +157,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['set_new_password'])) 
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reset Password - HabitForge</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
     <link rel="stylesheet" href="../src/css/theme.css">
 </head>
+
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
     <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
         <h2 class="text-3xl font-bold text-center text-gray-900 mb-6">Reset Password Anda</h2>
-
+        <link rel="shortcut icon" href="./assets/icon/pavicon.ico" type="image/x-icon">
         <?php if (!empty($error_message)): ?>
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
                 <strong class="font-bold">Error!</strong>
@@ -182,7 +185,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['set_new_password'])) 
             </div>
         <?php endif; ?>
 
-        <?php if ($valid_token && empty($success_message)): // Tampilkan formulir hanya jika token valid dan belum ada pesan sukses ?>
+        <?php if ($valid_token && empty($success_message)): // Tampilkan formulir hanya jika token valid dan belum ada pesan sukses 
+        ?>
             <p class="text-gray-600 text-center mb-6">Masukkan password baru Anda.</p>
             <form action="reset_password.php" method="POST">
                 <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
@@ -202,7 +206,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['set_new_password'])) 
                     </button>
                 </div>
             </form>
-        <?php elseif (empty($success_message)): // Tampilkan pesan untuk token tidak valid jika belum ada pesan sukses ?>
+        <?php elseif (empty($success_message)): // Tampilkan pesan untuk token tidak valid jika belum ada pesan sukses 
+        ?>
             <p class="text-center text-gray-600 text-sm mt-6">
                 Silakan kembali ke halaman <a href="forgot_password.php" class="text-indigo-600 hover:text-indigo-800 font-bold">Lupa Password</a> untuk memulai proses reset.
             </p>
@@ -215,4 +220,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['set_new_password'])) 
         <?php endif; ?>
     </div>
 </body>
+
 </html>

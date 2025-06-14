@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $stmt = $pdo->prepare("SELECT user_id FROM users WHERE username = ? OR email = ?");
             $stmt->execute([$username, $email]);
-            
+
             if ($stmt->rowCount() > 0) {
                 $errors['general'] = 'Username atau email sudah terdaftar';
             }
@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $pdo->prepare("INSERT INTO users (username, email, password, created_at) VALUES (?, ?, ?, NOW())");
             $stmt->execute([$username, $email, $hashed_password]);
-            
+
             $_SESSION['registration_success'] = true;
             header('Location: login.php');
             exit();
@@ -80,17 +80,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HabitForge - Daftar Akun</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="shortcut icon" href="./assets/icon/pavicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f3f4f6;
         }
+
         .error-message {
             color: #ef4444;
             font-size: 0.875rem;
@@ -98,6 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </style>
 </head>
+
 <body class="flex items-center justify-center min-h-screen">
     <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
         <h2 class="text-3xl font-bold text-center text-gray-900 mb-6">Daftar Akun</h2>
@@ -111,8 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form action="" method="POST" novalidate>
             <div class="mb-4">
                 <label for="username" class="block text-gray-700 text-sm font-bold mb-2">Username:</label>
-                <input type="text" id="username" name="username" value="<?= htmlspecialchars($username) ?>" 
-                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline <?= !empty($errors['username']) ? 'border-red-500' : '' ?>">
+                <input type="text" id="username" name="username" value="<?= htmlspecialchars($username) ?>"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline <?= !empty($errors['username']) ? 'border-red-500' : '' ?>">
                 <?php if (!empty($errors['username'])): ?>
                     <p class="error-message"><?= htmlspecialchars($errors['username']) ?></p>
                 <?php endif; ?>
@@ -120,8 +124,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="mb-4">
                 <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email:</label>
-                <input type="email" id="email" name="email" value="<?= htmlspecialchars($email) ?>" 
-                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline <?= !empty($errors['email']) ? 'border-red-500' : '' ?>">
+                <input type="email" id="email" name="email" value="<?= htmlspecialchars($email) ?>"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline <?= !empty($errors['email']) ? 'border-red-500' : '' ?>">
                 <?php if (!empty($errors['email'])): ?>
                     <p class="error-message"><?= htmlspecialchars($errors['email']) ?></p>
                 <?php endif; ?>
@@ -129,8 +133,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="mb-4">
                 <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password:</label>
-                <input type="password" id="password" name="password" 
-                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline <?= !empty($errors['password']) ? 'border-red-500' : '' ?>">
+                <input type="password" id="password" name="password"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline <?= !empty($errors['password']) ? 'border-red-500' : '' ?>">
                 <?php if (!empty($errors['password'])): ?>
                     <p class="error-message"><?= htmlspecialchars($errors['password']) ?></p>
                 <?php endif; ?>
@@ -138,8 +142,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="mb-6">
                 <label for="confirm_password" class="block text-gray-700 text-sm font-bold mb-2">Konfirmasi Password:</label>
-                <input type="password" id="confirm_password" name="confirm_password" 
-                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline <?= !empty($errors['confirm_password']) ? 'border-red-500' : '' ?>">
+                <input type="password" id="confirm_password" name="confirm_password"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline <?= !empty($errors['confirm_password']) ? 'border-red-500' : '' ?>">
                 <?php if (!empty($errors['confirm_password'])): ?>
                     <p class="error-message"><?= htmlspecialchars($errors['confirm_password']) ?></p>
                 <?php endif; ?>
@@ -162,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             wrapper.className = 'relative';
             input.parentNode.insertBefore(wrapper, input);
             wrapper.appendChild(input);
-            
+
             const toggle = document.createElement('span');
             toggle.className = 'absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer';
             toggle.innerHTML = `
@@ -172,11 +176,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </svg>
             `;
             wrapper.appendChild(toggle);
-            
+
             toggle.addEventListener('click', () => {
                 const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
                 input.setAttribute('type', type);
-                
+
                 // Update icon
                 const icon = toggle.querySelector('svg');
                 if (type === 'password') {
@@ -193,4 +197,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
     </script>
 </body>
+
 </html>

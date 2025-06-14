@@ -24,28 +24,28 @@ $emailConfig = [
     'from_email' => 'no-reply@habitForge.app', // Email yang akan terlihat sebagai pengirim
     'from_name' => 'HabitForge Support', // Nama pengirim
     // Sesuaikan dengan URL publik aplikasi Anda, pastikan path ke reset_password.php benar
-    'reset_link_base_url' => 'http://localhost/habitforge.app/public/reset_password.php' 
+    'reset_link_base_url' => 'http://localhost/habitforge.app/public/reset_password.php'
 ];
 // --- AKHIR KONFIGURASI EMAIL ---
 
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_forgot'])) { 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_forgot'])) {
     $identifier = trim($_POST['identifier']); // Bisa email atau username 
 
-    if (empty($identifier)) { 
-        $error = "Mohon masukkan Email atau Username Anda."; 
-    } else { 
-        try { 
+    if (empty($identifier)) {
+        $error = "Mohon masukkan Email atau Username Anda.";
+    } else {
+        try {
             // Cari user berdasarkan email atau username 
-            $stmt = $pdo->prepare("SELECT user_id, email, username FROM users WHERE email = :identifier OR username = :identifier LIMIT 1"); 
-            $stmt->execute([':identifier' => $identifier]); 
-            $user = $stmt->fetch(PDO::FETCH_ASSOC); 
+            $stmt = $pdo->prepare("SELECT user_id, email, username FROM users WHERE email = :identifier OR username = :identifier LIMIT 1");
+            $stmt->execute([':identifier' => $identifier]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
             // Pesan harus generik untuk mencegah enumerasi email/username, terlepas dari apakah user ditemukan atau tidak.
             // Ini adalah praktik keamanan terbaik.
             $message_to_user = "Jika email/username Anda terdaftar, instruksi reset password telah dikirimkan ke email Anda.";
 
-            if ($user) { 
+            if ($user) {
                 $user_email = $user['email'];
                 $user_id = $user['user_id'];
 
@@ -87,53 +87,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_forgot'])) {
                     $mail->isHTML(true); // Set email format to HTML
                     $mail->Subject = 'Reset Password Akun HabitForge Anda';
                     $mail->Body    = 'Halo ' . htmlspecialchars($user['username']) . ',<br><br>'
-                                   . 'Kami menerima permintaan untuk mereset password akun HabitForge Anda. '
-                                   . 'Untuk melanjutkan, silakan klik tautan di bawah ini:<br><br>'
-                                   . '<a href="' . htmlspecialchars($reset_link) . '">' . htmlspecialchars($reset_link) . '</a><br><br>'
-                                   . 'Tautan ini akan kedaluwarsa dalam 1 jam.<br>'
-                                   . 'Jika Anda tidak meminta reset password ini, abaikan email ini.<br><br>'
-                                   . 'Terima kasih,<br>'
-                                   . 'Tim HabitForge';
+                        . 'Kami menerima permintaan untuk mereset password akun HabitForge Anda. '
+                        . 'Untuk melanjutkan, silakan klik tautan di bawah ini:<br><br>'
+                        . '<a href="' . htmlspecialchars($reset_link) . '">' . htmlspecialchars($reset_link) . '</a><br><br>'
+                        . 'Tautan ini akan kedaluwarsa dalam 1 jam.<br>'
+                        . 'Jika Anda tidak meminta reset password ini, abaikan email ini.<br><br>'
+                        . 'Terima kasih,<br>'
+                        . 'Tim HabitForge';
                     $mail->AltBody = 'Halo ' . htmlspecialchars($user['username']) . ',\n\n'
-                                   . 'Kami menerima permintaan untuk mereset password akun HabitForge Anda. '
-                                   . 'Untuk melanjutkan, silakan salin dan tempel tautan di browser Anda:\n\n'
-                                   . htmlspecialchars($reset_link) . '\n\n'
-                                   . 'Tautan ini akan kedaluwarsa dalam 1 jam.\n'
-                                   . 'Jika Anda tidak meminta reset password ini, abaikan email ini.\n\n'
-                                   . 'Terima kasih,\n'
-                                   . 'Tim HabitForge';
+                        . 'Kami menerima permintaan untuk mereset password akun HabitForge Anda. '
+                        . 'Untuk melanjutkan, silakan salin dan tempel tautan di browser Anda:\n\n'
+                        . htmlspecialchars($reset_link) . '\n\n'
+                        . 'Tautan ini akan kedaluwarsa dalam 1 jam.\n'
+                        . 'Jika Anda tidak meminta reset password ini, abaikan email ini.\n\n'
+                        . 'Terima kasih,\n'
+                        . 'Tim HabitForge';
 
                     $mail->send();
                     // Setelah email berhasil dikirim, set pesan sukses generik
                     $message = $message_to_user;
-
                 } catch (Exception $e) {
                     // Log error PHPMailer, tapi jangan tampilkan ke pengguna untuk keamanan
                     error_log("PHPMailer Error: " . $e->getMessage());
                     // Tetap berikan pesan generik kepada pengguna
                     $message = $message_to_user; // Tetap informatif tetapi tidak mengungkapkan internal
                 }
-            } else { 
+            } else {
                 // User tidak ditemukan, tetapi tetap berikan pesan generik yang sama
                 $message = $message_to_user;
-            } 
-        } catch (PDOException $e) { 
-            error_log("Database error on forgot password: " . $e->getMessage()); 
-            $error = "Terjadi kesalahan. Silakan coba lagi nanti."; 
-        } 
-    } 
-} 
+            }
+        } catch (PDOException $e) {
+            error_log("Database error on forgot password: " . $e->getMessage());
+            $error = "Terjadi kesalahan. Silakan coba lagi nanti.";
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lupa Password - HabitForge</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="shortcut icon" href="./assets/icon/pavicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../src/css/theme.css">
 </head>
+
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
     <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
         <h2 class="text-3xl font-bold text-center text-gray-900 mb-6">Lupa Password?</h2>
@@ -170,4 +172,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_forgot'])) {
         </p>
     </div>
 </body>
+
 </html>
