@@ -1,0 +1,238 @@
+/* src/css/theme.css */
+/* Menghilangkan UI Google Translate yang muncul di bagian atas halaman */
+.goog-te-banner-frame.skiptranslate {
+    display: none !important;
+}
+body {
+    top: 0px !important; /* Menghilangkan margin atas yang mungkin ditambahkan oleh Google Translate */
+}
+
+/* Tetap menjaga styling untuk widget yang mungkin diletakkan di dalam #google_translate_element */
+#google_translate_element {
+    /* Aturan styling yang sudah ada */
+    margin-top: 1rem;
+    /* ... */
+}
+/* Menyembunyikan elemen select di dalam widget jika tidak ingin terlihat */
+#google_translate_element .goog-te-combo {
+    /* Jika Anda ingin menyembunyikan dropdown asli Google di dalam div ini */
+    /* display: none !important; */
+}
+
+/* Untuk notifikasi persetujuan */
+#consent-notification {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50; /* Pastikan ini cukup tinggi agar terlihat di atas konten lain */
+
+    /* Default state: hidden below screen, transparent */
+    transform: translateY(100%); /* Awalnya 100% di luar layar bawah */
+    opacity: 0; /* Awalnya transparan */
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out; /* Transisi untuk animasi */
+
+    /* Penting: Pastikan ini selalu block atau flex, jangan none */
+    /* Agar transisi dapat berfungsi saat class 'show' ditambahkan */
+    display: flex; /* Atau block, sesuai kebutuhan layout internalnya */
+    flex-direction: column; /* Sesuaikan dengan layout Tailwind Anda */
+    /* ... (Tambahkan kembali gaya Tailwind Anda di sini jika hilang) */
+    background-color: #1a202c; /* bg-gray-800 */
+    color: white;
+    padding: 1rem; /* p-4 */
+    /* ... dll. */
+}
+
+/* Kelas ini ditambahkan oleh JavaScript untuk menampilkan popup */
+#consent-notification.show {
+    transform: translateY(0); /* Muncul di layar */
+    opacity: 1; /* Sepenuhnya terlihat */
+}
+
+/* Styling untuk Page Loader Overlay */
+.page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Latar belakang gelap transparan */
+    display: flex; /* Untuk memusatkan spinner */
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Pastikan di atas semua elemen lain */
+    /* Properti awal untuk animasi: tersembunyi dan transparan */
+    opacity: 0;
+    visibility: hidden; /* Tambahkan visibility agar tidak interaktif saat tersembunyi */
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.page-loader.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Styling untuk Spinner (Contoh Sederhana) */
+.spinner {
+    border: 8px solid rgba(255, 255, 255, 0.3);
+    border-top: 8px solid #ffffff; /* Warna spinner */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite; /* Animasi berputar */
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Optional: Styling untuk menyembunyikan scrollbar saat loading */
+body.no-scroll {
+    overflow: hidden;
+}
+
+
+/* Styling for Dark Mode */
+/* ... (aturan dark mode yang sudah ada) ... */
+/* Styling for Dark Mode */
+body.dark {
+    background-color: #1a202c; /* dark gray background */
+    color: #e2e8f0; /* LIGHT GRAY TEXT for general body text */
+}
+
+body.dark .bg-white {
+    background-color: #2d3748; /* darker white */
+    color: #e2e8f0; /* Ensure text inside these elements is light */
+}
+
+/* Specific text colors for various elements */
+body.dark h1,
+body.dark h2,
+body.dark h3,
+body.dark h4,
+body.dark h5,
+body.dark h6 {
+    color: #edf2f7; /* Very light gray for headings */
+}
+
+body.dark p {
+    color: #cbd5e0; /* Slightly darker light gray for paragraph text */
+}
+
+/* Default Tailwind text colors that might be affected */
+body.dark .text-gray-900 {
+    color: #edf2f7; /* For elements explicitly using text-gray-900 */
+}
+body.dark .text-gray-800 {
+    color: #e2e8f0; /* For elements explicitly using text-gray-800 */
+}
+body.dark .text-gray-700 {
+    color: #cbd5e0; /* For labels and other text-gray-700 elements */
+}
+body.dark .text-gray-600 {
+    color: #a0aec0;
+}
+body.dark .text-gray-500 {
+    color: #a0aec0; /* For smaller/secondary text like descriptions */
+}
+body.dark .text-gray-400 {
+    color: #718096; /* If you have even lighter gray text, make it slightly darker in dark mode */
+}
+body.dark .text-gray-300 {
+    color: #4a5568; /* For very light gray text that might be too light in dark mode */
+}
+
+
+body.dark a {
+    color: #63b3ed; /* Light blue for links */
+}
+body.dark a:hover {
+    color: #90cdf4; /* Lighter blue on hover */
+}
+
+
+/* Input fields and select boxes */
+body.dark input,
+body.dark textarea,
+body.dark select {
+    background-color: #4a5568; /* Darker background for inputs */
+    color: #edf2f7; /* Light text for input content */
+    border-color: #4a5568; /* Darker border */
+}
+
+body.dark input::placeholder,
+body.dark textarea::placeholder {
+    color: #a0aec0; /* Lighter placeholder text */
+}
+
+body.dark input:disabled,
+body.dark textarea:disabled,
+body.dark select:disabled {
+    background-color: #2d3748; /* Even darker background for disabled inputs */
+    color: #a0aec0; /* Greyer text for disabled inputs */
+    border-color: #2d3748;
+}
+
+/* Border colors */
+body.dark .border-gray-300 {
+    border-color: #4a5568; /* Darker border */
+}
+body.dark .border-gray-200 {
+    border-color: #2d3748; /* Even darker border */
+}
+
+
+/* Notification Modal and Toast */
+body.dark .modal-content {
+    background-color: #2d3748;
+    color: #e2e8f0;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5); /* Stronger shadow in dark mode */
+}
+body.dark .modal-header {
+    color: #edf2f7;
+}
+body.dark .modal-body {
+    color: #cbd5e0;
+}
+body.dark .modal-footer .close {
+    background-color: #667eea;
+    color: white;
+}
+body.dark .notification.success { background-color: #28a745; } /* Tetap cerah untuk indikator */
+body.dark .notification.error { background-color: #dc3545; }
+body.dark .notification.info { background-color: #007bff; }
+
+/* Hide Google Translate branding (opsional, mungkin melanggar TOS) */
+.goog-te-gadget-simple {
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+}
+.goog-te-gadget-simple a {
+    color: inherit !important;
+    text-decoration: none !important;
+}
+.goog-te-gadget-simple .goog-te-menu-value {
+    color: inherit !important;
+}
+.VIpgJd-ZVi9od-ORHb-OEVmCD { /* Google Translate container */
+    border: none !important;
+    box-shadow: none !important;
+}
+body.dark .VIpgJd-ZVi9od-ORHb-OEVmCD {
+    background-color: transparent !important;
+}
+
+/* Adjust Google Translate widget styling */
+#google_translate_element {
+    margin-top: 1rem;
+}
+
+/* Umum untuk form fields disabled agar konsisten */
+.form-field.disabled, .password-field.disabled {
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+}
+body.dark .form-field.disabled, body.dark .password-field
+

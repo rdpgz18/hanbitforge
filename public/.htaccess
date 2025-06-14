@@ -1,0 +1,34 @@
+# Aktifkan RewriteEngine
+RewriteEngine On
+
+# Secara opsional, jika Anda ingin memaksa HTTPS (sangat direkomendasikan)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Atur basis URL jika aplikasi Anda berada di sub-direktori
+# Contoh: Jika aplikasi Anda di 'htdocs/myproject/', maka RewriteBase /myproject/
+# Jika aplikasi Anda di root domain, biarkan sebagai '/'
+RewriteBase /localhost/habitForge.app/
+
+# 1. Sembunyikan ekstensi .php
+# Jika request bukan direktori atau file yang ada
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+# Dan file .php dengan nama yang sama ada
+RewriteCond %{REQUEST_FILENAME}.php -f
+# Maka rewrite ke file .php tersebut
+RewriteRule ^([^/.]+)$ $1.php [L]
+
+# 2. Tangani kasus ketika ada request ke direktori public (jika public adalah subdirektori dari root)
+# Ini mungkin tidak diperlukan jika root web server Anda langsung menunjuk ke folder 'public'
+# Jika public adalah sub-direktori dari RewriteBase, dan Anda ingin mengarahkan semua request ke public/index.php
+# Anda mungkin perlu aturan yang lebih spesifik untuk framework Anda.
+# Namun, untuk kasus menyembunyikan ekstensi, fokus pada yang di atas dan di bawah ini.
+
+
+# 3. Tangani permintaan yang tidak mengarah ke file atau direktori yang ada
+# Ini sering digunakan untuk routing di framework MVC
+# Misalnya, semua request yang tidak ditemukan akan diarahkan ke index.php Anda.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L,QSA]
