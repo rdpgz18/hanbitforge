@@ -183,6 +183,15 @@ function getHabitProgressForToday($pdo, $userId, $habitId, $date) {
 
 //--- HABITS 
 // Fungsi yang sudah ada (contoh, sesuaikan dengan milik Anda)
+// Set default timezone di awal aplikasi Anda
+date_default_timezone_set('Asia/Jakarta');
+
+/**
+ * Mengambil semua kebiasaan untuk user tertentu.
+ * @param PDO $pdo Koneksi PDO.
+ * @param int $user_id ID pengguna.
+ * @return array Daftar kebiasaan.
+ */
 function getHabitsByUserId($pdo, $user_id)
 {
     try {
@@ -196,25 +205,105 @@ function getHabitsByUserId($pdo, $user_id)
     }
 }
 
+/**
+ * Menghitung progres kebiasaan berdasarkan streak dan frekuensi.
+ * Ini adalah contoh sederhana; Anda mungkin ingin logika yang lebih kompleks.
+ * @param int $current_streak Streak saat ini.
+ * @param string $frequency Frekuensi kebiasaan (misal: 'Setiap Hari', 'Setiap Minggu').
+ * @return int Progres dalam persen (0-100).
+ */
 function calculateProgress($current_streak, $frequency)
 {
-    // Implementasi perhitungan progres Anda di sini
-    // Contoh sederhana:
-    if ($frequency === 'Setiap Hari') {
-        return min(100, ($current_streak / 7) * 100); // Misal, target 7 hari untuk 100%
+    // Progres bisa diartikan sebagai seberapa dekat pengguna mencapai "target" tertentu
+    // atau sekadar visualisasi dari streak.
+    // Contoh: setiap streak 1 hari = 10% progres untuk tujuan 10 hari.
+    // Jika streak 0, progres 0.
+    if ($current_streak >= 10) { // Maksimum 100% jika streak mencapai 10
+        return 100;
+    } elseif ($current_streak > 0) {
+        return min(100, $current_streak * 10); // Setiap streak 1 hari, progres +10%
     }
     return 0; // Sesuaikan dengan logika Anda
 }
 
-// FUNGSI BARU UNTUK AUTO-RESET/AKTIFKAN KEBIASAAN
+/**
+ * Fungsi untuk menandai kebiasaan sebagai selesai.
+ * Ini akan meningkatkan streak, mengupdate status, dan tanggal selesai terakhir.
+ * @param PDO $pdo Koneksi PDO.
+ * @param int $habit_id ID kebiasaan.
+ * @param int $user_id ID pengguna.
+ * @return bool True jika berhasil, false jika gagal.
+ */
+function markHabitAsCompleted($pdo, $habit_id, $user_id)
+{
+    try {
+        $today = date('Y-m-d');
+
+        // Ambil data kebiasaan saat ini
+        $stmt_select = $pdo->prepare("SELECT status, current_streak, best_streak, last_completed_date FROM habits WHERE habit_id = :habit_id AND user_id = :user_id");
+        $stmt_select->bindParam(':habit_id', $habit_id, PDO::PARAM_INT);
+        $stmt_select->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+        $stmt_select->execute();
+        $habit = $stmt_select->fetch(PDO::FETCH_ASSOC);
+
+        if (!$habit) {
+            error_log("Habit ID $habit_id not found for user ID $user_id.");
+            return false;
+        }
+
+        // Cek apakah kebiasaan sudah diselesaikan hari ini
+        if ($habit['status'] === 'completed' && $habit['last_completed_date'] === $today) {
+            error_log("Habit ID $habit_id already completed today for user ID $user_id.");
+            return false; // Sudah selesai hari ini, tidak perlu diupdate
+        }
+
+        $new_streak = $habit['current_streak'] + 1;
+        $new_best_streak = max($new_streak, $habit['best_streak']);
+
+        $stmt_update = $pdo->prepare("
+            UPDATE habits
+            SET
+                status = 'completed',
+                current_streak = :new_streak,
+                best_streak = :new_best_streak,
+                last_completed_date = :today,
+                updated_at = NOW()
+            WHERE habit_id = :habit_id AND user_id = :user_id
+        ");
+
+        $stmt_update->bindParam(':new_streak', $new_streak, PDO::PARAM_INT);
+        $stmt_update->bindParam(':new_best_streak', $new_best_streak, PDO::PARAM_INT);
+        $stmt_update->bindParam(':today', $today, PDO::PARAM_STR);
+        $stmt_update->bindParam(':habit_id', $habit_id, PDO::PARAM_INT);
+        $stmt_update->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+
+        $stmt_update->execute();
+
+        error_log("Habit ID $habit_id completed. New streak: $new_streak.");
+        return true;
+
+    } catch (PDOException $e) {
+        error_log("Error marking habit as completed: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Otomatis mengupdate status kebiasaan dan mereset streak yang terlewatkan per hari.
+ * Ini harus dijalankan sekali setiap kali user mengakses dashboard atau halaman yang menampilkan kebiasaan.
+ * @param PDO $pdo Koneksi PDO.
+ * @param int $user_id ID pengguna.
+ * @return int Jumlah kebiasaan yang diperbarui.
+ */
 function autoUpdateHabitStatuses($pdo, $user_id)
 {
     $today = date('Y-m-d');
+    $yesterday = date('Y-m-d', strtotime('-1 day'));
     $updated_count = 0;
 
     try {
         // 1. Ambil semua kebiasaan pengguna
-        $stmt = $pdo->prepare("SELECT habit_id, status, last_completed_date FROM habits WHERE user_id = :user_id");
+        $stmt = $pdo->prepare("SELECT habit_id, status, current_streak, last_completed_date, frequency FROM habits WHERE user_id = :user_id");
         $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
         $stmt->execute();
         $habits = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -222,43 +311,58 @@ function autoUpdateHabitStatuses($pdo, $user_id)
         foreach ($habits as $habit) {
             $habit_id = $habit['habit_id'];
             $current_status = $habit['status'];
+            $current_streak = $habit['current_streak'];
             $last_completed_date = $habit['last_completed_date'];
+            $frequency = $habit['frequency']; // Ambil frekuensi
 
-            // Jika kebiasaan sudah selesai (completed) dan last_completed_date BUKAN hari ini
-            if ($current_status === 'completed' && $last_completed_date !== $today) {
-                // Reset status ke 'active' dan streak ke 0
-                $stmt_update = $pdo->prepare("UPDATE habits SET status = 'active', current_streak = 0 WHERE habit_id = :habit_id");
-                $stmt_update->bindParam(':habit_id', $habit_id, PDO::PARAM_INT);
-                $stmt_update->execute();
-                $updated_count++;
-                error_log("Habit ID $habit_id reset to active. Last completed: $last_completed_date, Today: $today");
+            // Logika auto-reset untuk kebiasaan harian ('Setiap Hari')
+            if ($frequency === 'Setiap Hari') {
+                // Jika kebiasaan sudah selesai KEMARIN atau sebelumnya, dan BUKAN hari ini
+                if ($current_status === 'completed' && $last_completed_date !== $today) {
+                    // Reset status ke 'active' untuk hari ini
+                    // Streak akan direset ke 0 jika terakhir selesai adalah KEMARIN atau lebih lama
+                    // Jika last_completed_date adalah kemarin, maka streak berlanjut
+                    // Jika last_completed_date adalah 2 hari lalu atau lebih, maka streak putus
+                    $new_streak = 0;
+                    if ($last_completed_date === $yesterday) {
+                        // Jika selesai kemarin, streak tidak putus, tapi status direset
+                        // (Streak akan bertambah saat diklik "Selesai Hari Ini" lagi)
+                        $new_streak = $current_streak; // Tetap pakai streak kemarin, akan di ++ saat completed
+                    }
+                    // Jika last_completed_date bukan kemarin (atau null), maka streak putus
+                    // (new_streak sudah 0)
+
+                    $stmt_update = $pdo->prepare("UPDATE habits SET status = 'active' WHERE habit_id = :habit_id");
+                    $stmt_update->bindParam(':habit_id', $habit_id, PDO::PARAM_INT);
+                    $stmt_update->execute();
+                    $updated_count++;
+                    error_log("Habit ID $habit_id reset to active for today. Last completed: $last_completed_date");
+
+                }
+                // Jika kebiasaan aktif tapi belum diselesaikan hari ini DAN terakhir diselesaikan BUKAN kemarin
+                // Ini berarti streak-nya putus atau belum pernah diselesaikan
+                // Atau, jika status 'active' dan last_completed_date bukan hari ini DAN bukan kemarin
+                if ($current_status === 'active' && ($last_completed_date === null || $last_completed_date < $yesterday)) {
+                     if ($current_streak > 0) { // Hanya reset jika ada streak
+                        $stmt_update = $pdo->prepare("UPDATE habits SET current_streak = 0 WHERE habit_id = :habit_id");
+                        $stmt_update->bindParam(':habit_id', $habit_id, PDO::PARAM_INT);
+                        $stmt_update->execute();
+                        $updated_count++;
+                        error_log("Habit ID $habit_id streak reset to 0 (missed previous days). Last completed: $last_completed_date");
+                    }
+                }
             }
-            // Jika kebiasaan dalam status 'active' dan last_completed_date adalah kemarin
-            // Ini bisa jadi untuk kebiasaan harian yang tidak diselesaikan dan perlu direset streaknya
-            elseif ($current_status === 'active' && $last_completed_date && $last_completed_date !== $today && $last_completed_date === date('Y-m-d', strtotime('-1 day'))) {
-                // Artinya kebiasaan tidak diselesaikan kemarin, reset streaknya
-                $stmt_update = $pdo->prepare("UPDATE habits SET current_streak = 0 WHERE habit_id = :habit_id");
-                $stmt_update->bindParam(':habit_id', $habit_id, PDO::PARAM_INT);
-                $stmt_update->execute();
-                $updated_count++;
-                error_log("Habit ID $habit_id streak reset to 0 (missed). Last completed: $last_completed_date, Today: $today");
-            }
-            // Tambahan: Jika status 'pending' dan last_completed_date bukan hari ini, jadikan active dan reset streak.
-            // Ini untuk kasus jika ada kebiasaan yang masih pending dari hari sebelumnya
-            elseif ($current_status === 'pending' && $last_completed_date !== $today) {
-                $stmt_update = $pdo->prepare("UPDATE habits SET status = 'active', current_streak = 0, last_completed_date = NULL WHERE habit_id = :habit_id");
-                $stmt_update->bindParam(':habit_id', $habit_id, PDO::PARAM_INT);
-                $stmt_update->execute();
-                $updated_count++;
-                error_log("Habit ID $habit_id reset from pending to active. Last completed: $last_completed_date, Today: $today");
-            }
+            // TODO: Tambahkan logika untuk frekuensi 'Setiap Minggu', 'Setiap Bulan', dll.
+            // Logika untuk mingguan/bulanan akan lebih kompleks, misalnya reset setiap awal minggu/bulan.
+            // Untuk saat ini, fokus pada 'Setiap Hari'.
         }
     } catch (PDOException $e) {
         error_log("Error in autoUpdateHabitStatuses: " . $e->getMessage());
-        return 0; // Mengembalikan 0 jika ada kesalahan
+        return 0;
     }
     return $updated_count;
 }
+
 
 //---EXERCISE
 

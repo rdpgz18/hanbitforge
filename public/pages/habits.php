@@ -7,7 +7,29 @@ require_once "../auth/auth.php";
 
 $user_id = $_SESSION['user_id'];
 // Panggil fungsi auto-update status kebiasaan di sini
+// Panggil fungsi autoUpdateHabitStatuses setiap kali user mengakses halaman ini
+// Ini akan memastikan status kebiasaan dan streak diperbarui sesuai tanggal
 autoUpdateHabitStatuses($pdo, $user_id);
+
+// Ambil kebiasaan terbaru setelah update otomatis
+$habits = getHabitsByUserId($pdo, $user_id);
+
+// Tangani AJAX request untuk menyelesaikan kebiasaan
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'complete_habit') {
+    $habit_id = $_POST['habit_id'] ?? 0;
+    if ($habit_id > 0) {
+        if (markHabitAsCompleted($pdo, $habit_id, $user_id)) {
+            echo json_encode(['success' => true, 'message' => 'Kebiasaan berhasil diselesaikan!']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Gagal menyelesaikan kebiasaan atau sudah selesai hari ini.']);
+        }
+    } else {
+        echo json_encode(['success' => false, 'message' => 'ID kebiasaan tidak valid.']);
+    }
+    exit(); // Penting untuk menghentikan eksekusi setelah merespons AJAX
+}
+
+
 // --- START: Perubahan untuk Filter dan Search ---
 $filter_status = $_GET['filter'] ?? 'Semua'; // Ambil nilai filter dari URL, default 'Semua'
 $search_query = $_GET['search'] ?? '';       // Ambil nilai search dari URL, default kosong
@@ -325,97 +347,52 @@ try {
             </section>
 
             <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <?php if (!empty($habits)): ?>
-                    <?php foreach ($habits as $habit):
-                        $card_border_color = '';
-                        $status_bg_color = '';
-                        $status_text_color = '';
-                        $progress_bar_color = '';
-                        $button_classes = '';
-                        $button_text = '';
-                        $button_disabled = false;
-
-                        switch ($habit['status']) {
-                            case 'active':
-                                $card_border_color = 'border-indigo-500';
-                                $status_bg_color = 'bg-indigo-100';
-                                $status_text_color = 'text-indigo-700';
-                                $progress_bar_color = 'bg-indigo-600';
-                                $button_classes = 'bg-indigo-500 text-white hover:bg-indigo-600';
-                                $button_text = 'Selesai Hari Ini';
-                                break;
-                            case 'completed':
-                                $card_border_color = 'border-green-500';
-                                $status_bg_color = 'bg-green-100';
-                                $status_text_color = 'text-green-700';
-                                $progress_bar_color = 'bg-green-600';
-                                $button_classes = 'bg-gray-200 text-gray-600 cursor-not-allowed';
-                                $button_text = 'Selesai Hari Ini';
-                                $button_disabled = true;
-                                break;
-                            case 'pending':
-                                $card_border_color = 'border-yellow-500';
-                                $status_bg_color = 'bg-yellow-100';
-                                $status_text_color = 'text-yellow-700';
-                                $progress_bar_color = 'bg-yellow-600';
-                                $button_classes = 'bg-yellow-500 text-white hover:bg-yellow-600';
-                                $button_text = 'Tandai Selesai';
-                                break;
-                            default:
-                                $card_border_color = 'border-gray-500';
-                                $status_bg_color = 'bg-gray-100';
-                                $status_text_color = 'text-gray-700';
-                                $progress_bar_color = 'bg-gray-600';
-                                $button_classes = 'bg-gray-500 text-white hover:bg-gray-600';
-                                $button_text = 'Aksi';
-                        }
-
-                        $progress_percentage = calculateProgress($habit['current_streak'], $habit['frequency']);
-                    ?>
-                        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 <?= $card_border_color ?> hover:shadow-lg transition-shadow duration-200 flex flex-col">
-                            <div class="flex justify-between items-start mb-3">
-                                <h4 class="text-xl font-semibold text-gray-900"><?= htmlspecialchars($habit['habit_name']) ?></h4>
-                                <span class="text-xs font-semibold <?= $status_text_color ?> <?= $status_bg_color ?> px-3 py-1 rounded-full">
-                                    <?= ucfirst($habit['status']) ?>
-                                </span>
-                            </div>
-                            <p class="text-gray-600 mb-4"><?= htmlspecialchars($habit['description']) ?></p>
-                            <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
-                                <span>Frekuensi: <?= htmlspecialchars($habit['frequency']) ?></span>
-                                <span>Streak: <?= htmlspecialchars($habit['current_streak']) ?> Hari
-                                    <?php if ($habit['current_streak'] > 0 && $habit['status'] == 'active') echo ' 🔥'; ?>
-                                    <?php if ($habit['status'] == 'completed') echo ' ✨'; ?>
-                                    <?php if ($habit['current_streak'] == 0 && $habit['status'] == 'pending') echo ' 😥'; ?>
-                                </span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-                                <div class="<?= $progress_bar_color ?> h-2.5 rounded-full" style="width: <?= $progress_percentage ?>%"></div>
-                            </div>
-                            <div class="flex justify-between items-center mt-auto">
-                                <button class="edit-habit-btn text-sm text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
-                                    data-habit-id="<?= htmlspecialchars($habit['habit_id']) ?>">
-                                    Edit
-                                </button>
-                                <?php if (in_array($habit['frequency'], ['Menit', 'Detik'])): ?>
-                                    <button class="start-habit-btn py-2 px-4 rounded-md text-sm transition-colors duration-200 bg-blue-500 text-white hover:bg-blue-600"
-                                        data-habit-id="<?= htmlspecialchars($habit['habit_id']) ?>"
-                                        data-habit-name="<?= htmlspecialchars($habit['habit_name']) ?>"
-                                        data-habit-frequency="<?= htmlspecialchars($habit['frequency']) ?>">
-                                        Mulai Kebiasaan
-                                    </button>
-                                <?php endif; ?>
-                                <button class="complete-habit-btn py-2 px-4 rounded-md text-sm transition-colors duration-200 <?= $button_classes ?>"
-                                    data-habit-id="<?= htmlspecialchars($habit['habit_id']) ?>"
-                                    <?= $button_disabled ? 'disabled' : '' ?>>
-                                    <?= $button_text ?>
-                                </button>
-                            </div>
+            <?php if (!empty($habits)): ?>
+                <?php foreach ($habits as $habit):
+                    $progress = calculateProgress($habit['current_streak'], $habit['frequency']);
+                    $status_class = $habit['status'] === 'completed' ? 'bg-green-100 border-green-400' : 'bg-white border-gray-200';
+                    $status_text_class = $habit['status'] === 'completed' ? 'text-green-600' : 'text-indigo-600';
+                ?>
+                    <div class="habit-card p-6 rounded-lg shadow-md border <?php echo $status_class; ?>"
+                         data-status="<?php echo htmlspecialchars($habit['status']); ?>"
+                         data-name="<?php echo htmlspecialchars(strtolower($habit['habit_name'])); ?>">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-xl font-bold text-gray-900"><?php echo htmlspecialchars($habit['habit_name']); ?></h3>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold <?php echo $status_text_class; ?> bg-opacity-20"><?php echo htmlspecialchars(ucfirst($habit['status'])); ?></span>
                         </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <p class="text-gray-600 text-center col-span-full">Belum ada kebiasaan yang ditambahkan. Mari buat kebiasaan baru!</p>
-                <?php endif; ?>
-            </section>
+                        <p class="text-gray-700 mb-2"><?php echo htmlspecialchars($habit['description']); ?></p>
+                        <p class="text-gray-600 text-sm mb-4">Frekuensi: <?php echo htmlspecialchars($habit['frequency']); ?></p>
+
+                        <div class="mb-4">
+                            <p class="text-gray-700 text-sm mb-1">Streak: <?php echo htmlspecialchars($habit['current_streak']); ?> Hari</p>
+                            <?php if (isset($habit['best_streak'])): ?>
+                                <p class="text-gray-700 text-sm mb-1">Rekor Streak Terbaik: <?php echo htmlspecialchars($habit['best_streak']); ?> Hari</p>
+                            <?php endif; ?>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                                <div class="bg-indigo-600 h-2.5 rounded-full" style="width: <?php echo $progress; ?>%"></div>
+                            </div>
+                            <p class="text-gray-500 text-xs mt-1 text-right"><?php echo $progress; ?>% Progres</p>
+                        </div>
+
+                        <div class="flex justify-between items-center mt-4">
+                            <a href="edit_habit.php?id=<?php echo $habit['habit_id']; ?>" class="text-indigo-600 hover:underline text-sm font-semibold">Edit</a>
+                            <?php if ($habit['status'] !== 'completed'): ?>
+                                <button type="button" class="complete-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline text-sm"
+                                        data-habit-id="<?php echo $habit['habit_id']; ?>">
+                                    Selesai Hari Ini
+                                </button>
+                            <?php else: ?>
+                                <button type="button" class="bg-green-600 text-white font-bold py-2 px-4 rounded-md opacity-75 cursor-not-allowed text-sm" disabled>
+                                    Sudah Selesai
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p class="col-span-full text-center text-gray-600 text-lg">Belum ada kebiasaan yang dibuat. Klik "Tambah Kebiasaan Baru" untuk memulai!</p>
+            <?php endif; ?>
+        </section>
         </main>
     </div>
 
