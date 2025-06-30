@@ -526,14 +526,14 @@ if (!$userProfile) {
                             <div class="border-t pt-6">
                                 <h4 class="text-lg font-semibold text-gray-800">Kebijakan Privasi</h4>
                                 <p class="text-gray-600 mt-2">Baca bagaimana kami mengelola data Anda.</p>
-                                <a href="#" class="inline-block mt-4 text-indigo-600 hover:text-indigo-800 font-semibold transition-colors duration-200">
+                                <a href="./privacy_policy.php" class="inline-block mt-4 text-indigo-600 hover:text-indigo-800 font-semibold transition-colors duration-200">
                                     Lihat Kebijakan Privasi
                                 </a>
                             </div>
                             <div class="border-t pt-6">
                                 <h4 class="text-lg font-semibold text-gray-800">Persyaratan Layanan</h4>
                                 <p class="text-gray-600 mt-2">Pahami syarat dan ketentuan penggunaan aplikasi kami.</p>
-                                <a href="#" class="inline-block mt-4 text-indigo-600 hover:text-indigo-800 font-semibold transition-colors duration-200">
+                                <a href="./terms_of_service.php" class="inline-block mt-4 text-indigo-600 hover:text-indigo-800 font-semibold transition-colors duration-200">
                                     Lihat Persyaratan Layanan
                                 </a>
                             </div>
@@ -546,7 +546,7 @@ if (!$userProfile) {
                             <p class="text-gray-600">HabitForge adalah aplikasi yang dirancang untuk membantu Anda membangun kebiasaan baik, melacak kemajuan olahraga, memantau nutrisi, dan mengelola keuangan Anda secara efektif.</p>
                             <p class="text-gray-600">Versi Aplikasi: <span class="font-semibold">1.0.0</span></p>
                             <p class="text-gray-600">Hak Cipta © 2025 HabitForge. Semua hak dilindungi undang-undang.</p>
-                            <a href="#" class="inline-block mt-4 text-indigo-600 hover:text-indigo-800 font-semibold transition-colors duration-200">
+                            <a href="../dashboard.php" class="inline-block mt-4 text-indigo-600 hover:text-indigo-800 font-semibold transition-colors duration-200">
                                 Kunjungi Situs Web Kami
                             </a>
                         </div>
