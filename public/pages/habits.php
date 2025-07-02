@@ -347,52 +347,58 @@ try {
             </section>
 
             <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <?php if (!empty($habits)): ?>
-                <?php foreach ($habits as $habit):
-                    $progress = calculateProgress($habit['current_streak'], $habit['frequency']);
-                    $status_class = $habit['status'] === 'completed' ? 'bg-green-100 border-green-400' : 'bg-white border-gray-200';
-                    $status_text_class = $habit['status'] === 'completed' ? 'text-green-600' : 'text-indigo-600';
-                ?>
-                    <div class="habit-card p-6 rounded-lg shadow-md border <?php echo $status_class; ?>"
-                         data-status="<?php echo htmlspecialchars($habit['status']); ?>"
-                         data-name="<?php echo htmlspecialchars(strtolower($habit['habit_name'])); ?>">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="text-xl font-bold text-gray-900"><?php echo htmlspecialchars($habit['habit_name']); ?></h3>
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold <?php echo $status_text_class; ?> bg-opacity-20"><?php echo htmlspecialchars(ucfirst($habit['status'])); ?></span>
-                        </div>
-                        <p class="text-gray-700 mb-2"><?php echo htmlspecialchars($habit['description']); ?></p>
-                        <p class="text-gray-600 text-sm mb-4">Frekuensi: <?php echo htmlspecialchars($habit['frequency']); ?></p>
-
-                        <div class="mb-4">
-                            <p class="text-gray-700 text-sm mb-1">Streak: <?php echo htmlspecialchars($habit['current_streak']); ?> Hari</p>
-                            <?php if (isset($habit['best_streak'])): ?>
-                                <p class="text-gray-700 text-sm mb-1">Rekor Streak Terbaik: <?php echo htmlspecialchars($habit['best_streak']); ?> Hari</p>
-                            <?php endif; ?>
-                            <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                                <div class="bg-indigo-600 h-2.5 rounded-full" style="width: <?php echo $progress; ?>%"></div>
+                <?php if (!empty($habits)): ?>
+                    <?php foreach ($habits as $habit):
+                        $progress = calculateProgress($habit['current_streak'], $habit['frequency']);
+                        $status_class = $habit['status'] === 'completed' ? 'bg-green-100 border-green-400' : 'bg-white border-gray-200';
+                        $status_text_class = $habit['status'] === 'completed' ? 'text-green-600' : 'text-indigo-600';
+                    ?>
+                        <div class="habit-card p-6 rounded-lg shadow-md border <?php echo $status_class; ?>"
+                            data-status="<?php echo htmlspecialchars($habit['status']); ?>"
+                            data-name="<?php echo htmlspecialchars(strtolower($habit['habit_name'])); ?>">
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-xl font-bold text-gray-900"><?php echo htmlspecialchars($habit['habit_name']); ?></h3>
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold <?php echo $status_text_class; ?> bg-opacity-20"><?php echo htmlspecialchars(ucfirst($habit['status'])); ?></span>
                             </div>
-                            <p class="text-gray-500 text-xs mt-1 text-right"><?php echo $progress; ?>% Progres</p>
-                        </div>
+                            <p class="text-gray-700 mb-2"><?php echo htmlspecialchars($habit['description']); ?></p>
+                            <p class="text-gray-600 text-sm mb-4">Frekuensi: <?php echo htmlspecialchars($habit['frequency']); ?></p>
 
-                        <div class="flex justify-between items-center mt-4">
-                            <a href="edit_habit.php?id=<?php echo $habit['habit_id']; ?>" class="text-indigo-600 hover:underline text-sm font-semibold">Edit</a>
-                            <?php if ($habit['status'] !== 'completed'): ?>
-                                <button type="button" class="complete-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline text-sm"
+                            <div class="mb-4">
+                                <p class="text-gray-700 text-sm mb-1">Streak: <?php echo htmlspecialchars($habit['current_streak']); ?> Hari</p>
+                                <?php if (isset($habit['best_streak'])): ?>
+                                    <p class="text-gray-700 text-sm mb-1">Rekor Streak Terbaik: <?php echo htmlspecialchars($habit['best_streak']); ?> Hari</p>
+                                <?php endif; ?>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                                    <div class="bg-indigo-600 h-2.5 rounded-full" style="width: <?php echo $progress; ?>%"></div>
+                                </div>
+                                <p class="text-gray-500 text-xs mt-1 text-right"><?php echo $progress; ?>% Progres</p>
+                            </div>
+
+                            <div class="flex justify-between items-center mt-4">
+                                <button type="button" class="edit-button text-indigo-600 hover:underline text-sm font-semibold"
+                                    data-habit-id="<?php echo $habit['habit_id']; ?>"
+                                    data-habit-name="<?php echo htmlspecialchars($habit['habit_name']); ?>"
+                                    data-description="<?php echo htmlspecialchars($habit['description']); ?>"
+                                    data-frequency="<?php echo htmlspecialchars($habit['frequency']); ?>">
+                                    Edit
+                                </button>
+                                <?php if ($habit['status'] !== 'completed'): ?>
+                                    <button type="button" class="complete-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline text-sm"
                                         data-habit-id="<?php echo $habit['habit_id']; ?>">
-                                    Selesai Hari Ini
-                                </button>
-                            <?php else: ?>
-                                <button type="button" class="bg-green-600 text-white font-bold py-2 px-4 rounded-md opacity-75 cursor-not-allowed text-sm" disabled>
-                                    Sudah Selesai
-                                </button>
-                            <?php endif; ?>
+                                        Selesai Hari Ini
+                                    </button>
+                                <?php else: ?>
+                                    <button type="button" class="bg-green-600 text-white font-bold py-2 px-4 rounded-md opacity-75 cursor-not-allowed text-sm" disabled>
+                                        Sudah Selesai
+                                    </button>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <p class="col-span-full text-center text-gray-600 text-lg">Belum ada kebiasaan yang dibuat. Klik "Tambah Kebiasaan Baru" untuk memulai!</p>
-            <?php endif; ?>
-        </section>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p class="col-span-full text-center text-gray-600 text-lg">Belum ada kebiasaan yang dibuat. Klik "Tambah Kebiasaan Baru" untuk memulai!</p>
+                <?php endif; ?>
+            </section>
         </main>
     </div>
 
@@ -606,7 +612,7 @@ try {
             }
 
             // Event listener untuk tombol "Selesai Hari Ini" / "Tandai Selesai"
-            document.querySelectorAll('.complete-habit-btn').forEach(button => {
+            document.querySelectorAll('.complete-button').forEach(button => {
                 button.addEventListener('click', function() {
                     const habitId = this.dataset.habitId;
                     const currentButton = this; // Simpan referensi ke tombol yang diklik
@@ -709,7 +715,7 @@ try {
             });
 
             // Event listener untuk tombol "Edit" pada setiap kartu kebiasaan
-            document.querySelectorAll('.edit-habit-btn').forEach(button => {
+            document.querySelectorAll('.edit-button').forEach(button => {
                 button.addEventListener('click', function() {
                     const habitId = this.dataset.habitId; // Ambil ID kebiasaan dari data-attribute
 
